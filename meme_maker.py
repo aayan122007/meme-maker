@@ -19,19 +19,37 @@ def draw_text_on_image(image_path, text):
     img = Image.open(image_path)
     draw = ImageDraw.Draw(img)
 
-    # Try to use a TTF font; fallback to default
-    try:
-        font = ImageFont.truetype("arial.ttf", 40)
-    except:
-        font = ImageFont.load_default()
+    # Start with a large font size and shrink it if needed
+    max_width = int(img.width * 0.9)
+    font_size = 60
+    font_path = "arial.ttf"
 
-    # Calculate text position using textbbox (for Pillow 10+)
-    bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = bbox[2] - bbox[0]
+    while font_size > 10:
+        try:
+            font = ImageFont.truetype(font_path, font_size)
+        except:
+            font = ImageFont.load_default()
+            break
+
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        if text_width <= max_width:
+            break
+        font_size -= 2
+
     text_height = bbox[3] - bbox[1]
-
     x = (img.width - text_width) // 2
     y = img.height - text_height - 20
+
+    # Draw outline for visibility
+    for dx in range(-2, 3):
+        for dy in range(-2, 3):
+            draw.text((x + dx, y + dy), text, font=font, fill="black")
+
+    # Draw main white text
+    draw.text((x, y), text, font=font, fill="white")
+    return img
+
 
     # Optional: Draw text outline for visibility
     outline_range = 2
